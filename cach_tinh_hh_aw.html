@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công Cụ Tính Thu Nhập Amway</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 800px;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="container mx-auto p-8 bg-white rounded-xl shadow-lg">
+        <h1 class="text-3xl font-bold text-center text-blue-800 mb-6">Công Cụ Tính Thu Nhập Amway</h1>
+        <p class="text-center text-gray-600 mb-8">
+            Dựa trên Kế hoạch Trả thưởng Amway Việt Nam, công cụ này giúp bạn ước tính thu nhập của mình.
+        </p>
+
+        <!-- Main User Input Section -->
+        <div class="bg-blue-50 p-6 rounded-xl mb-6">
+            <h2 class="text-xl font-semibold text-blue-700 mb-4">Nhập PV của bạn</h2>
+            <div class="flex items-center mb-4">
+                <label for="my-pv-input" class="w-1/2 text-lg font-medium text-blue-800">PV Cá nhân:</label>
+                <input
+                    type="number"
+                    id="my-pv-input"
+                    value="600"
+                    class="flex-1 p-3 border border-blue-200 rounded-lg text-lg text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+                />
+            </div>
+            <div class="flex items-center">
+                <label for="my-customer-pv-input" class="w-1/2 text-lg font-medium text-blue-800">PV từ KHNPP:</label>
+                <input
+                    type="number"
+                    id="my-customer-pv-input"
+                    value="0"
+                    class="flex-1 p-3 border border-blue-200 rounded-lg text-lg text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+                />
+            </div>
+        </div>
+
+        <!-- Downline Inputs Section -->
+        <div class="bg-gray-100 p-6 rounded-xl mb-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Các Nhánh Tuyến Dưới</h2>
+            <div id="downline-container" class="space-y-4">
+                <!-- Dynamically added downline inputs will go here -->
+            </div>
+            <button id="add-downline-btn" class="mt-4 w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                + Thêm Nhánh Tuyến Dưới
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <div class="bg-green-50 p-6 rounded-xl">
+            <h2 class="text-xl font-semibold text-green-700 mb-4">Kết Quả Ước Tính</h2>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center text-lg font-medium cursor-pointer hover:bg-green-100 transition duration-200 rounded-lg p-2" id="row-total-pv">
+                    <span class="text-green-800">Tổng PV Nhóm:</span>
+                    <span id="total-pv" class="text-green-900 font-bold">0 PV</span>
+                </div>
+                <div class="flex justify-between items-center text-lg font-medium cursor-pointer hover:bg-green-100 transition duration-200 rounded-lg p-2" id="row-achievement-percent">
+                    <span class="text-green-800">Mức Hoa Hồng Thành Tích:</span>
+                    <span id="achievement-percent" class="text-green-900 font-bold">0%</span>
+                </div>
+                <div class="flex justify-between items-center text-lg font-medium cursor-pointer hover:bg-green-100 transition duration-200 rounded-lg p-2" id="row-my-income">
+                    <span class="text-green-800">Thu nhập cá nhân:</span>
+                    <span id="my-income" class="text-green-900 font-bold">0 VND</span>
+                </div>
+                <div class="flex justify-between items-center text-lg font-medium cursor-pointer hover:bg-green-100 transition duration-200 rounded-lg p-2" id="row-downline-bonus">
+                    <span class="text-green-800">Hoa hồng chênh lệch:</span>
+                    <span id="downline-bonus" class="text-green-900 font-bold">0 VND</span>
+                </div>
+                <div id="leadership-bonus-row" class="flex justify-between items-center text-lg font-medium hidden cursor-pointer hover:bg-green-100 transition duration-200 rounded-lg p-2">
+                    <span class="text-green-800">Hoa hồng lãnh đạo 6%:</span>
+                    <span id="leadership-bonus" class="text-green-900 font-bold">0 VND</span>
+                </div>
+                <div id="bronze-foundation-bonus-row" class="flex justify-between items-center text-lg font-medium hidden cursor-pointer hover:bg-green-100 transition duration-200 rounded-lg p-2">
+                    <span class="text-green-800">Tiền thưởng Bronze Foundation:</span>
+                    <span id="bronze-foundation-bonus" class="text-green-900 font-bold">0 VND</span>
+                </div>
+                 <div id="bronze-builder-bonus-row" class="flex justify-between items-center text-lg font-medium hidden cursor-pointer hover:bg-green-100 transition duration-200 rounded-lg p-2">
+                    <span class="text-green-800">Tiền thưởng Bronze Builder:</span>
+                    <span id="bronze-builder-bonus" class="text-green-900 font-bold">0 VND</span>
+                </div>
+                <hr class="border-green-300">
+                <div class="flex justify-between items-center text-lg font-bold">
+                    <span class="text-green-800">Tổng thu nhập ước tính:</span>
+                    <span id="estimated-income" class="text-green-900">0 VND</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for Analysis -->
+    <div id="analysis-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-11/12 md:w-1/2 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 id="modal-title" class="text-2xl font-bold text-gray-800">Phân Tích Chi Tiết</h3>
+                <button id="close-modal-btn" class="text-gray-500 hover:text-gray-800 transition duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div id="modal-content" class="text-gray-700">
+                <!-- Analysis content will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Box -->
+    <div id="message-box" class="fixed bottom-6 right-6 z-50 p-4 rounded-lg text-white bg-red-500 shadow-xl hidden transition-opacity duration-300">
+        <!-- Message will be displayed here -->
+    </div>
+
+    <script>
+        // Data model to store the state of the application
+        const appState = {
+            myPersonalPV: 600,
+            myCustomerPV: 0,
+            downline: [
+                { id: Date.now(), name: 'Nhánh 1', personalPV: 600, customerPV: 0 },
+            ],
+            // This is the correct achievement table based on the provided PDF
+            achievementTable: [
+                { pv: 10000, percent: 21 },
+                { pv: 7000, percent: 18 },
+                { pv: 4000, percent: 15 },
+                { pv: 2400, percent: 12 },
+                { pv: 1200, percent: 9 },
+                { pv: 600, percent: 6 },
+                { pv: 200, percent: 3 },
+                { pv: 0, percent: 0 }
+            ],
+            // Bronze bonus rates based on the provided document
+            bronzeRates: {
+                foundation: 15, // 15% bonus
+                builder: 20     // 20% bonus
+            },
+            // BV multiplier updated as per user's request
+            BV_MULTIPLIER: 26800
+        };
+
+        // DOM elements
+        const myPersonalPVInput = document.getElementById('my-pv-input');
+        const myCustomerPVInput = document.getElementById('my-customer-pv-input');
+        const downlineContainer = document.getElementById('downline-container');
+        const addDownlineBtn = document.getElementById('add-downline-btn');
+        const totalPVElement = document.getElementById('total-pv');
+        const achievementPercentElement = document.getElementById('achievement-percent');
+        const myIncomeElement = document.getElementById('my-income');
+        const downlineBonusElement = document.getElementById('downline-bonus');
+        const leadershipBonusRow = document.getElementById('leadership-bonus-row');
+        const leadershipBonusElement = document.getElementById('leadership-bonus');
+        const bronzeFoundationBonusRow = document.getElementById('bronze-foundation-bonus-row');
+        const bronzeFoundationBonusElement = document.getElementById('bronze-foundation-bonus');
+        const bronzeBuilderBonusRow = document.getElementById('bronze-builder-bonus-row');
+        const bronzeBuilderBonusElement = document.getElementById('bronze-builder-bonus');
+        const estimatedIncomeElement = document.getElementById('estimated-income');
+        const messageBox = document.getElementById('message-box');
+        const analysisModal = document.getElementById('analysis-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalContent = document.getElementById('modal-content');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+
+        // Global variables to store the latest calculation results for analysis
+        let latestCalculationResults = {};
+
+        /**
+         * Calculates the achievement percentage based on total PV.
+         * @param {number} totalPV - The total group PV.
+         * @returns {number} The achievement percentage.
+         */
+        function getAchievementPercent(totalPV) {
+            for (const level of appState.achievementTable) {
+                if (totalPV >= level.pv) {
+                    return level.percent;
+                }
+            }
+            return 0;
+        }
+        
+        /**
+         * Displays a message box with a given message and color.
+         * @param {string} message - The message to display.
+         * @param {string} type - The type of message ('error' or 'success').
+         */
+        function showMessage(message, type) {
+            messageBox.textContent = message;
+            messageBox.className = 'fixed bottom-6 right-6 z-50 p-4 rounded-lg text-white shadow-xl transition-opacity duration-300';
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-500');
+            } else {
+                messageBox.classList.add('bg-green-500');
+            }
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 3000);
+        }
+        
+        /**
+         * Updates the display values for all downline input sections.
+         */
+        function updateDownlineDisplay() {
+            // Find all downline elements
+            const downlineElements = downlineContainer.querySelectorAll('.downline-item');
+            downlineElements.forEach(el => {
+                const id = parseInt(el.dataset.id);
+                const member = appState.downline.find(m => m.id === id);
+                if (member) {
+                    const totalPVElement = el.querySelector('.downline-total-pv');
+                    const percentElement = el.querySelector('.downline-percent');
+                    const nameElement = el.querySelector('.downline-name-display'); // New element
+                    const totalDownlinePV = parseInt(member.personalPV) + parseInt(member.customerPV);
+                    const downlineAchievementPercent = getAchievementPercent(totalDownlinePV);
+
+                    if (totalPVElement) {
+                        totalPVElement.textContent = `${totalDownlinePV} PV`;
+                    }
+                    if (percentElement) {
+                        percentElement.textContent = `${downlineAchievementPercent}%`;
+                    }
+                    if (nameElement) {
+                         nameElement.textContent = member.name;
+                    }
+                }
+            });
+        }
+        
+        /**
+         * Renders the downline input fields based on the appState.
+         */
+        function renderDownlineInputs() {
+            downlineContainer.innerHTML = '';
+            appState.downline.forEach(member => {
+                const totalDownlinePV = parseInt(member.personalPV) + parseInt(member.customerPV);
+                const downlineAchievementPercent = getAchievementPercent(totalDownlinePV);
+                const downlineDiv = document.createElement('div');
+                downlineDiv.className = 'bg-gray-200 p-4 rounded-lg space-y-2 downline-item';
+                downlineDiv.dataset.id = member.id;
+                downlineDiv.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <label class="w-1/2 text-sm font-medium text-gray-700">Tên Nhánh:</label>
+                        <input
+                            type="text"
+                            data-id="${member.id}"
+                            data-type="name"
+                            value="${member.name}"
+                            class="flex-1 p-2 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 transition duration-200 downline-pv-input"
+                        />
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <label class="w-1/2 text-sm font-medium text-gray-700">PV Cá nhân:</label>
+                        <input
+                            type="number"
+                            data-id="${member.id}"
+                            data-type="personal"
+                            value="${member.personalPV}"
+                            class="flex-1 p-2 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 transition duration-200 downline-pv-input"
+                        />
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <label class="w-1/2 text-sm font-medium text-gray-700">PV từ KHNPP:</label>
+                        <input
+                            type="number"
+                            data-id="${member.id}"
+                            data-type="customer"
+                            value="${member.customerPV}"
+                            class="flex-1 p-2 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 transition duration-200 downline-pv-input"
+                        />
+                    </div>
+                    <div class="flex justify-between items-center mt-2 text-sm font-medium">
+                         <span class="text-gray-800 downline-name-display">${member.name}:</span>
+                        <span class="text-blue-600 font-bold downline-total-pv">${totalDownlinePV} PV</span>
+                        <span class="text-blue-600 font-bold w-12 text-right downline-percent">
+                             ${downlineAchievementPercent}%
+                        </span>
+                        <button
+                            data-id="${member.id}"
+                            class="delete-downline-btn p-2 rounded-full text-red-500 hover:bg-red-100 transition duration-200"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                downlineContainer.appendChild(downlineDiv);
+            });
+        }
+
+        /**
+         * Updates all calculations and the UI based on the current appState.
+         * This function is the single source of truth for UI updates.
+         */
+        function updateUI() {
+            // Calculate my personal and customer PV
+            const myPersonalAndCustomerPV = parseInt(appState.myPersonalPV) + parseInt(appState.myCustomerPV);
+
+            // 1. Calculate downline PV and percentages
+            const downlineDetails = appState.downline.map(member => {
+                const totalDownlinePV = parseInt(member.personalPV) + parseInt(member.customerPV);
+                const downlineAchievementPercent = getAchievementPercent(totalDownlinePV);
+                return { id: member.id, name: member.name, totalPV: totalDownlinePV, percent: downlineAchievementPercent };
+            });
+
+            // 2. Separate 21% legs and non-21% legs
+            const twentyOnePercentLegs = downlineDetails.filter(d => d.percent === 21);
+            const otherDownlines = downlineDetails.filter(d => d.percent !== 21);
+
+            // 3. Calculate my PV group excluding 21% legs
+            const otherDownlinePV = otherDownlines.reduce((sum, member) => sum + member.totalPV, 0);
+            const myPersonalGroupPV = myPersonalAndCustomerPV + otherDownlinePV;
+            
+            // 4. Calculate total group PV (all PVs, including 21% legs)
+            const totalGroupPV = myPersonalGroupPV + twentyOnePercentLegs.reduce((sum, member) => sum + member.totalPV, 0);
+
+            // 5. Determine my achievement percentage
+            const myAchievementPercent = getAchievementPercent(totalGroupPV);
+            
+            // 6. Calculate my personal income
+            const myBV = myPersonalAndCustomerPV * appState.BV_MULTIPLIER;
+            const myIncome = myBV * (myAchievementPercent / 100);
+            
+            let differentialBonus = 0;
+            let leadershipBonus = 0;
+            const differentialBonusDetails = [];
+            const leadershipBonusDetails = [];
+
+            // 7. Calculate differential bonus from non-21% legs
+            otherDownlines.forEach(member => {
+                const differentialPercent = myAchievementPercent - member.percent;
+                if (differentialPercent > 0) {
+                    const downlineBV = member.totalPV * appState.BV_MULTIPLIER;
+                    const bonus = downlineBV * (differentialPercent / 100);
+                    differentialBonus += bonus;
+                    differentialBonusDetails.push({
+                        id: member.id,
+                        name: member.name,
+                        pv: member.totalPV,
+                        percent: member.percent,
+                        differential: differentialPercent,
+                        bonus: bonus
+                    });
+                }
+            });
+
+            // 8. Calculate Leadership Bonus from 21% legs
+            twentyOnePercentLegs.forEach(leg => {
+                const downlineBV = leg.totalPV * appState.BV_MULTIPLIER;
+                const grossBonus = downlineBV * 0.06;
+                let netBonus = 0;
+
+                // Determine if it's a "Full-Qualified" or "Partially-Qualified" bonus
+                if (myPersonalGroupPV >= 10000) {
+                    // Full-Qualified Leadership Bonus
+                    netBonus = grossBonus;
+                    leadershipBonusDetails.push({
+                        id: leg.id,
+                        name: leg.name,
+                        pv: leg.totalPV,
+                        type: "Toàn phần",
+                        netBonus: netBonus
+                    });
+                } else if (myPersonalGroupPV >= 4000 && myPersonalGroupPV < 10000) {
+                    // Partially-Qualified Leadership Bonus
+                    const pvDifference = Math.max(0, 10000 - myPersonalGroupPV);
+                    const adjustment = pvDifference * appState.BV_MULTIPLIER * 0.06;
+                    netBonus = Math.max(0, grossBonus - adjustment);
+                    leadershipBonusDetails.push({
+                        id: leg.id,
+                        name: leg.name,
+                        pv: leg.totalPV,
+                        type: "Một phần",
+                        uplinePersonalGroupPV: myPersonalGroupPV,
+                        grossBonus: grossBonus,
+                        adjustment: adjustment,
+                        netBonus: netBonus
+                    });
+                } else {
+                    // Not qualified for Leadership Bonus from this leg
+                    leadershipBonusDetails.push({
+                        id: leg.id,
+                        name: leg.name,
+                        pv: leg.totalPV,
+                        type: "Không đủ điều kiện",
+                        uplinePersonalGroupPV: myPersonalGroupPV,
+                        netBonus: 0,
+                        reason: "Doanh số nhóm cá nhân dưới 4000 PV."
+                    });
+                }
+                leadershipBonus += netBonus;
+            });
+            
+            // Show/hide leadership bonus row based on the bonus value
+            if (leadershipBonus > 0) {
+                leadershipBonusRow.classList.remove('hidden');
+            } else {
+                leadershipBonusRow.classList.add('hidden');
+            }
+
+            const totalAchievementBonus = myIncome + differentialBonus + leadershipBonus;
+
+            // 9. Calculate Bronze Foundation and Bronze Builder bonuses
+            let bronzeFoundationBonus = 0;
+            let bronzeBuilderBonus = 0;
+            let qualified3PercentLegs = 0;
+            let qualified6PercentLegs = 0;
+            
+            // Recalculate based on all downline legs
+            downlineDetails.forEach(member => {
+                if (member.percent >= 3) {
+                    qualified3PercentLegs++;
+                }
+                if (member.percent >= 6) {
+                    qualified6PercentLegs++;
+                }
+            });
+
+            if (myAchievementPercent >= 9 && qualified3PercentLegs >= 3) {
+                bronzeFoundationBonus = totalAchievementBonus * (appState.bronzeRates.foundation / 100);
+                bronzeFoundationBonusRow.classList.remove('hidden');
+            } else {
+                bronzeFoundationBonusRow.classList.add('hidden');
+            }
+
+            if (myAchievementPercent >= 15 && qualified6PercentLegs >= 3) {
+                bronzeBuilderBonus = totalAchievementBonus * (appState.bronzeRates.builder / 100);
+                bronzeBuilderBonusRow.classList.remove('hidden');
+            } else {
+                bronzeBuilderBonusRow.classList.add('hidden');
+            }
+            
+            // 10. Calculate total income by adding all eligible bonuses
+            const totalIncome = totalAchievementBonus + bronzeFoundationBonus + bronzeBuilderBonus;
+
+            // 11. Store results for analysis
+            latestCalculationResults = {
+                myPersonalAndCustomerPV,
+                myPersonalGroupPV,
+                totalGroupPV,
+                myAchievementPercent,
+                myIncome,
+                differentialBonus,
+                differentialBonusDetails,
+                leadershipBonus,
+                leadershipBonusDetails,
+                bronzeFoundationBonus,
+                bronzeBuilderBonus,
+                totalAchievementBonus,
+                totalIncome,
+                qualified3PercentLegs,
+                qualified6PercentLegs
+            };
+
+            // 12. Update the DOM with the new values
+            totalPVElement.textContent = `${totalGroupPV.toLocaleString('vi-VN')} PV`;
+            achievementPercentElement.textContent = `${myAchievementPercent}%`;
+            myIncomeElement.textContent = `${myIncome.toLocaleString('vi-VN')} VND`;
+            downlineBonusElement.textContent = `${differentialBonus.toLocaleString('vi-VN')} VND`;
+            leadershipBonusElement.textContent = `${leadershipBonus.toLocaleString('vi-VN')} VND`;
+            bronzeFoundationBonusElement.textContent = `${bronzeFoundationBonus.toLocaleString('vi-VN')} VND`;
+            bronzeBuilderBonusElement.textContent = `${bronzeBuilderBonus.toLocaleString('vi-VN')} VND`;
+            estimatedIncomeElement.textContent = `${totalIncome.toLocaleString('vi-VN')} VND`;
+
+            // Cập nhật lại các giá trị hiển thị của nhánh tuyến dưới mà không render lại input
+            updateDownlineDisplay();
+        }
+
+        /**
+         * Renders the analysis modal based on the data.
+         * @param {string} title - The title of the modal.
+         * @param {string} content - The HTML content for the modal.
+         */
+        function showAnalysisModal(title, content) {
+            modalTitle.textContent = title;
+            modalContent.innerHTML = content;
+            analysisModal.classList.remove('hidden');
+        }
+
+        // Event Listeners
+        myPersonalPVInput.addEventListener('input', (event) => {
+            appState.myPersonalPV = parseInt(event.target.value) || 0;
+            updateUI();
+        });
+        
+        myCustomerPVInput.addEventListener('input', (event) => {
+            appState.myCustomerPV = parseInt(event.target.value) || 0;
+            updateUI();
+        });
+
+        addDownlineBtn.addEventListener('click', () => {
+            const newId = Date.now();
+            const newIndex = appState.downline.length + 1;
+            appState.downline.push({ id: newId, name: `Nhánh ${newIndex}`, personalPV: 600, customerPV: 0 });
+            // Rerender all downline inputs only when adding a new one
+            renderDownlineInputs();
+            updateUI();
+        });
+
+        // Use event delegation for downline inputs and delete buttons
+        downlineContainer.addEventListener('input', (event) => {
+            if (event.target.classList.contains('downline-pv-input')) {
+                const id = parseInt(event.target.dataset.id);
+                const type = event.target.dataset.type;
+                const member = appState.downline.find(m => m.id === id);
+                if (member) {
+                    if (type === 'name') {
+                        member.name = event.target.value;
+                    } else if (type === 'personal') {
+                        member.personalPV = parseInt(event.target.value) || 0;
+                    } else if (type === 'customer') {
+                        member.customerPV = parseInt(event.target.value) || 0;
+                    }
+                    updateUI();
+                }
+            }
+        });
+        
+        downlineContainer.addEventListener('click', (event) => {
+            if (event.target.closest('.delete-downline-btn')) {
+                const id = parseInt(event.target.closest('.delete-downline-btn').dataset.id);
+                appState.downline = appState.downline.filter(member => member.id !== id);
+                // Rerender all downline inputs only when deleting one
+                renderDownlineInputs();
+                updateUI();
+            }
+        });
+
+        // Event listeners for results rows to show analysis
+        document.getElementById('row-total-pv').addEventListener('click', () => {
+            const totalPVContent = `
+                <div class="space-y-4">
+                    <p><strong>Tổng PV Nhóm</strong> là tổng điểm từ PV cá nhân của bạn, PV từ khách hàng của bạn và tổng PV của tất cả các nhánh tuyến dưới.</p>
+                    <p><strong>Công thức:</strong> Tổng PV Cá nhân + Tổng PV Các nhánh tuyến dưới</p>
+                    <p class="font-bold">
+                        ${latestCalculationResults.myPersonalAndCustomerPV.toLocaleString('vi-VN')} PV (Cá nhân) + ${(latestCalculationResults.totalGroupPV - latestCalculationResults.myPersonalAndCustomerPV).toLocaleString('vi-VN')} PV (Các nhánh) = ${latestCalculationResults.totalGroupPV.toLocaleString('vi-VN')} PV
+                    </p>
+                </div>
+            `;
+            showAnalysisModal('Phân Tích Tổng PV Nhóm', totalPVContent);
+        });
+        
+        document.getElementById('row-achievement-percent').addEventListener('click', () => {
+            let content = `
+                <p><strong>Mức Hoa Hồng Thành Tích</strong> được xác định dựa trên Tổng PV Nhóm của bạn theo bảng sau:</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500 rounded-lg">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Giá trị điểm hàng tháng</th>
+                                <th scope="col" class="px-6 py-3">% Hoa hồng thành tích</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            appState.achievementTable.forEach(level => {
+                content += `<tr class="bg-white border-b hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">${level.pv >= 10000 ? '>= 10,000' : level.pv.toLocaleString('vi-VN')}</td>
+                                <td class="px-6 py-4">${level.percent}%</td>
+                            </tr>`;
+            });
+            content += `
+                        </tbody>
+                    </table>
+                </div>
+                <p class="mt-4">Với tổng PV nhóm là <strong>${latestCalculationResults.totalGroupPV.toLocaleString('vi-VN')} PV</strong>, bạn đạt mức hoa hồng thành tích là <strong>${latestCalculationResults.myAchievementPercent}%</strong>.</p>
+            `;
+            showAnalysisModal('Phân Tích Mức Hoa Hồng Thành Tích', content);
+        });
+
+        document.getElementById('row-my-income').addEventListener('click', () => {
+            const myPersonalAndCustomerPV = latestCalculationResults.myPersonalAndCustomerPV;
+            const myBV = myPersonalAndCustomerPV * appState.BV_MULTIPLIER;
+            const myIncome = latestCalculationResults.myIncome;
+            const myIncomeContent = `
+                <div class="space-y-4">
+                    <p><strong>Thu nhập cá nhân</strong> được tính dựa trên doanh số cá nhân và mức hoa hồng thành tích của bạn.</p>
+                    <p><strong>Công thức:</strong> (PV Cá nhân + PV từ KHNPP) x BV x Mức % Hoa hồng Thành tích</p>
+                    <p class="font-bold">
+                        (${myPersonalAndCustomerPV.toLocaleString('vi-VN')} PV) x ${appState.BV_MULTIPLIER.toLocaleString('vi-VN')} VND/PV x ${latestCalculationResults.myAchievementPercent}% = ${myIncome.toLocaleString('vi-VN')} VND
+                    </p>
+                </div>
+            `;
+            showAnalysisModal('Phân Tích Thu Nhập Cá Nhân', myIncomeContent);
+        });
+
+        document.getElementById('row-downline-bonus').addEventListener('click', () => {
+            let content = `
+                <p><strong>Hoa hồng chênh lệch</strong> là khoản thu nhập từ các nhánh tuyến dưới của bạn chưa đạt 21%. Nó được tính dựa trên chênh lệch phần trăm giữa mức hoa hồng của bạn và mức hoa hồng của từng nhánh.</p>
+                <div class="mt-4 space-y-4">
+            `;
+            if (latestCalculationResults.differentialBonusDetails.length > 0) {
+                latestCalculationResults.differentialBonusDetails.forEach((detail) => {
+                    content += `
+                        <div class="bg-gray-100 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">Nhánh ${detail.name}:</h4>
+                            <p><strong>Công thức:</strong> Doanh số nhánh x Chênh lệch % Hoa hồng</p>
+                            <p class="text-sm">
+                                (${detail.pv.toLocaleString('vi-VN')} PV x ${appState.BV_MULTIPLIER.toLocaleString('vi-VN')} VND/PV) x (${latestCalculationResults.myAchievementPercent}% - ${detail.percent}%) = ${detail.bonus.toLocaleString('vi-VN')} VND
+                            </p>
+                        </div>
+                    `;
+                });
+                content += `
+                    <div class="mt-4 font-bold text-right">
+                        Tổng cộng: ${latestCalculationResults.differentialBonus.toLocaleString('vi-VN')} VND
+                    </div>
+                `;
+            } else {
+                content += `<p>Bạn không nhận được hoa hồng chênh lệch từ các nhánh nào.</p>`;
+            }
+            content += `</div>`;
+            showAnalysisModal('Phân Tích Hoa Hồng Chênh Lệch', content);
+        });
+
+        // Event listener for Leadership bonus
+        document.getElementById('leadership-bonus-row').addEventListener('click', () => {
+            let content = `
+                <p><strong>Hoa hồng lãnh đạo 6%</strong> là khoản thưởng được trả khi bạn có một nhánh tuyến dưới trực tiếp đạt 21%.</p>
+                <div class="mt-4 space-y-4">
+            `;
+            if (latestCalculationResults.leadershipBonusDetails.length > 0) {
+                latestCalculationResults.leadershipBonusDetails.forEach((detail) => {
+                    content += `
+                        <div class="bg-gray-100 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">Nhánh ${detail.name}:</h4>
+                    `;
+                    if (detail.type === "Toàn phần") {
+                         content += `
+                            <p class="text-green-600 font-semibold">Bạn đủ điều kiện nhận hoa hồng lãnh đạo Toàn phần!</p>
+                            <p><strong>Điều kiện:</strong> Doanh số nhóm cá nhân của bạn đạt từ 10.000 PV trở lên.</p>
+                            <p class="font-semibold">Doanh số nhóm cá nhân của bạn: ${latestCalculationResults.myPersonalGroupPV.toLocaleString('vi-VN')} PV</p>
+                            <p><strong>Công thức:</strong> Doanh số nhánh 21% x 6%</p>
+                            <p class="text-sm">
+                                (${detail.pv.toLocaleString('vi-VN')} PV x ${appState.BV_MULTIPLIER.toLocaleString('vi-VN')} VND/PV) x 6% = ${detail.netBonus.toLocaleString('vi-VN')} VND
+                            </p>
+                        `;
+                    } else if (detail.type === "Một phần") {
+                         content += `
+                            <p class="text-yellow-600 font-semibold">Bạn đủ điều kiện nhận hoa hồng lãnh đạo Một phần.</p>
+                            <p><strong>Điều kiện:</strong> Doanh số nhóm cá nhân của bạn đạt từ 4.000 PV đến dưới 10.000 PV.</p>
+                            <p class="font-semibold">Doanh số nhóm cá nhân của bạn: ${latestCalculationResults.myPersonalGroupPV.toLocaleString('vi-VN')} PV</p>
+                            <p><strong>Công thức:</strong> (Doanh số nhánh 21% x 6%) - Khoản điều chỉnh</p>
+                             <p><strong>Khoản điều chỉnh:</strong></p>
+                            <p class="text-sm">
+                                (10,000 - ${detail.uplinePersonalGroupPV.toLocaleString('vi-VN')}) PV x ${appState.BV_MULTIPLIER.toLocaleString('vi-VN')} VND/PV x 6% = ${detail.adjustment.toLocaleString('vi-VN')} VND
+                            </p>
+                             <p><strong>Hoa hồng Lãnh đạo thực nhận:</strong></p>
+                            <p class="text-sm">
+                                ${detail.grossBonus.toLocaleString('vi-VN')} VND - ${detail.adjustment.toLocaleString('vi-VN')} VND = ${detail.netBonus.toLocaleString('vi-VN')} VND
+                            </p>
+                        `;
+                    } else { // Not qualified
+                        content += `
+                            <p class="text-red-600 font-semibold">Bạn chưa đủ điều kiện nhận Hoa hồng Lãnh đạo từ nhánh này.</p>
+                            <p><strong>Lý do:</strong> ${detail.reason}</p>
+                            <p class="font-semibold">Doanh số nhóm cá nhân của bạn: ${latestCalculationResults.myPersonalGroupPV.toLocaleString('vi-VN')} PV</p>
+                        `;
+                    }
+                    content += `</div>`;
+                });
+                 content += `
+                    <div class="mt-4 font-bold text-right">
+                        Tổng cộng: ${latestCalculationResults.leadershipBonus.toLocaleString('vi-VN')} VND
+                    </div>
+                `;
+            } else {
+                content += `<p>Bạn không có nhánh nào đủ điều kiện để nhận hoa hồng lãnh đạo.</p>`;
+            }
+            content += `</div>`;
+            showAnalysisModal('Phân Tích Hoa Hồng Lãnh Đạo 6%', content);
+        });
+
+
+        // Event listener for Bronze Foundation
+        document.getElementById('bronze-foundation-bonus-row').addEventListener('click', () => {
+            const content = `
+                <p><strong>Tiền thưởng Bronze Foundation</strong> là khoản thưởng bổ sung cho các Nhà Phân Phối mới đạt được các điều kiện sau:</p>
+                <ul class="list-disc list-inside mt-4 space-y-2">
+                    <li>Đạt mức 9% trở lên.</li>
+                    <li>Có ít nhất 3 nhánh tuyến dưới đạt từ 3% trở lên.</li>
+                </ul>
+                <p class="mt-4"><strong>Công thức:</strong> Tổng Hoa hồng Thành tích x 15%</p>
+                <p class="font-bold">
+                    ${latestCalculationResults.totalAchievementBonus.toLocaleString('vi-VN')} VND x 15% = ${latestCalculationResults.bronzeFoundationBonus.toLocaleString('vi-VN')} VND
+                </p>
+            `;
+            showAnalysisModal('Phân Tích Tiền Thưởng Bronze Foundation', content);
+        });
+
+        // Event listener for Bronze Builder
+        document.getElementById('bronze-builder-bonus-row').addEventListener('click', () => {
+            const content = `
+                <p><strong>Tiền thưởng Bronze Builder</strong> là khoản thưởng bổ sung cho các Nhà Phân Phối mới đạt được các điều kiện sau:</p>
+                <ul class="list-disc list-inside mt-4 space-y-2">
+                    <li>Đạt mức 15% trở lên.</li>
+                    <li>Có ít nhất 3 nhánh tuyến dưới đạt từ 6% trở lên.</li>
+                </ul>
+                <p class="mt-4"><strong>Công thức:</strong> Tổng Hoa hồng Thành tích x 20%</p>
+                <p class="font-bold">
+                    ${latestCalculationResults.totalAchievementBonus.toLocaleString('vi-VN')} VND x 20% = ${latestCalculationResults.bronzeBuilderBonus.toLocaleString('vi-VN')} VND
+                </p>
+            `;
+            showAnalysisModal('Phân Tích Tiền Thưởng Bronze Builder', content);
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            analysisModal.classList.add('hidden');
+        });
+
+        analysisModal.addEventListener('click', (event) => {
+            if (event.target === analysisModal) {
+                analysisModal.classList.add('hidden');
+            }
+        });
+
+
+        // Initial setup
+        window.onload = () => {
+            renderDownlineInputs();
+            updateUI();
+        };
+    </script>
+</body>
+</html>
