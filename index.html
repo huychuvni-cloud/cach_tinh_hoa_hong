@@ -96,6 +96,10 @@
                     <span class="text-green-800">Tiền thưởng Bronze Builder:</span>
                     <span id="bronze-builder-bonus" class="text-green-900 font-bold">0 VND</span>
                 </div>
+                <div id="csi-bonus-row" class="flex justify-between items-center text-lg font-medium hidden cursor-pointer hover:bg-green-100 transition duration-200 rounded-lg p-2">
+                    <span class="text-green-800">Hoa hồng bán lẻ CSI:</span>
+                    <span id="csi-bonus" class="text-green-900 font-bold">0 VND</span>
+                </div>
                 <hr class="border-green-300">
                 <div class="flex justify-between items-center text-lg font-bold">
                     <span class="text-green-800">Tổng thu nhập ước tính:</span>
@@ -170,6 +174,8 @@
         const bronzeFoundationBonusElement = document.getElementById('bronze-foundation-bonus');
         const bronzeBuilderBonusRow = document.getElementById('bronze-builder-bonus-row');
         const bronzeBuilderBonusElement = document.getElementById('bronze-builder-bonus');
+        const csiBonusRow = document.getElementById('csi-bonus-row');
+        const csiBonusElement = document.getElementById('csi-bonus');
         const estimatedIncomeElement = document.getElementById('estimated-income');
         const messageBox = document.getElementById('message-box');
         const analysisModal = document.getElementById('analysis-modal');
@@ -310,7 +316,7 @@
          */
         function updateUI() {
             // Calculate my personal and customer PV
-            const myPersonalAndCustomerPV = parseInt(appState.myPersonalPV) + parseInt(appState.myCustomerPV);
+            const myPersonalAndCustomerPV = parseInt(myPersonalPVInput.value) + parseInt(myCustomerPVInput.value);
 
             // 1. Calculate downline PV and percentages
             const downlineDetails = appState.downline.map(member => {
@@ -339,6 +345,7 @@
             
             let differentialBonus = 0;
             let leadershipBonus = 0;
+            let csiBonus = 0; // New variable for CSI bonus
             const differentialBonusDetails = [];
             const leadershipBonusDetails = [];
 
@@ -446,11 +453,26 @@
                 bronzeBuilderBonusRow.classList.add('hidden');
             }
             
-            // 10. Calculate total income by adding all eligible bonuses
-            const totalIncome = totalAchievementBonus + bronzeFoundationBonus + bronzeBuilderBonus;
+            // 10. Calculate CSI Bonus (CSI: Customer Sales Incentive)
+            const myPersonalPV = parseInt(myPersonalPVInput.value) || 0;
+            const myCustomerPV = parseInt(myCustomerPVInput.value) || 0;
+            // The document states CSI is for 9% and below, so myAchievementPercent must be <= 9
+            if (myPersonalPV >= 50 && myCustomerPV > 0 && myAchievementPercent <= 9) {
+                const csiPercent = 10 - myAchievementPercent;
+                const customerBV = myCustomerPV * appState.BV_MULTIPLIER;
+                csiBonus = customerBV * (csiPercent / 100);
+                csiBonusRow.classList.remove('hidden');
+            } else {
+                csiBonusRow.classList.add('hidden');
+            }
 
-            // 11. Store results for analysis
+            // 11. Calculate total income by adding all eligible bonuses
+            const totalIncome = totalAchievementBonus + bronzeFoundationBonus + bronzeBuilderBonus + csiBonus;
+
+            // 12. Store results for analysis
             latestCalculationResults = {
+                myPersonalPV,
+                myCustomerPV,
                 myPersonalAndCustomerPV,
                 myPersonalGroupPV,
                 totalGroupPV,
@@ -463,12 +485,13 @@
                 bronzeFoundationBonus,
                 bronzeBuilderBonus,
                 totalAchievementBonus,
+                csiBonus,
                 totalIncome,
                 qualified3PercentLegs,
                 qualified6PercentLegs
             };
 
-            // 12. Update the DOM with the new values
+            // 13. Update the DOM with the new values
             totalPVElement.textContent = `${totalGroupPV.toLocaleString('vi-VN')} PV`;
             achievementPercentElement.textContent = `${myAchievementPercent}%`;
             myIncomeElement.textContent = `${myIncome.toLocaleString('vi-VN')} VND`;
@@ -476,6 +499,7 @@
             leadershipBonusElement.textContent = `${leadershipBonus.toLocaleString('vi-VN')} VND`;
             bronzeFoundationBonusElement.textContent = `${bronzeFoundationBonus.toLocaleString('vi-VN')} VND`;
             bronzeBuilderBonusElement.textContent = `${bronzeBuilderBonus.toLocaleString('vi-VN')} VND`;
+            csiBonusElement.textContent = `${csiBonus.toLocaleString('vi-VN')} VND`;
             estimatedIncomeElement.textContent = `${totalIncome.toLocaleString('vi-VN')} VND`;
 
             // Cập nhật lại các giá trị hiển thị của nhánh tuyến dưới mà không render lại input
@@ -718,6 +742,46 @@
                 </p>
             `;
             showAnalysisModal('Phân Tích Tiền Thưởng Bronze Builder', content);
+        });
+
+        // Event listener for CSI Bonus
+        document.getElementById('csi-bonus-row').addEventListener('click', () => {
+            const myPersonalPV = latestCalculationResults.myPersonalPV;
+            const myCustomerPV = latestCalculationResults.myCustomerPV;
+            const myAchievementPercent = latestCalculationResults.myAchievementPercent;
+            const csiBonus = latestCalculationResults.csiBonus;
+
+            let content = `<p><strong>Hoa hồng bán lẻ CSI</strong> (Customer Sales Incentive) là khoản thưởng cho Nhà Phân Phối, được tính trên doanh số từ các đơn hàng của Khách hàng Nhà phân phối (KHNPP) đủ điều kiện.</p>`;
+            
+            if (myPersonalPV < 50) {
+                content += `
+                    <p class="text-red-600 font-semibold mt-4">Bạn chưa đủ điều kiện nhận Hoa hồng CSI.</p>
+                    <p class="mt-2"><strong>Lý do:</strong> Doanh số cá nhân của bạn (${myPersonalPV} PV) dưới mức tối thiểu là 50 PV.</p>
+                `;
+            } else if (myAchievementPercent > 9) {
+                content += `
+                    <p class="text-red-600 font-semibold mt-4">Bạn chưa đủ điều kiện nhận Hoa hồng CSI.</p>
+                    <p class="mt-2"><strong>Lý do:</strong> Mức Hoa hồng Thành tích của bạn (${myAchievementPercent}%) đã vượt qua mức áp dụng là 9% (tài liệu quy định áp dụng cho mức 9% trở xuống).</p>
+                `;
+            } else if (myCustomerPV <= 0) {
+                 content += `
+                    <p class="text-red-600 font-semibold mt-4">Bạn chưa đủ điều kiện nhận Hoa hồng CSI.</p>
+                    <p class="mt-2"><strong>Lý do:</strong> Bạn cần có doanh số từ Khách hàng Nhà Phân Phối.</p>
+                `;
+            } else {
+                const csiPercent = 10 - myAchievementPercent;
+                content += `
+                    <ul class="list-disc list-inside mt-4 space-y-2">
+                        <li><strong>Điều kiện:</strong> Doanh số cá nhân của bạn đạt 50 PV trở lên.</li>
+                        <li><strong>Phạm vi:</strong> Mức hoa hồng thành tích của bạn từ 9% trở xuống (${myAchievementPercent}%).</li>
+                    </ul>
+                    <p class="mt-4"><strong>Công thức:</strong> (PV từ KHNPP x BV) x (10% - Mức % Hoa hồng Thành tích)</p>
+                    <p class="font-bold">
+                        (${myCustomerPV.toLocaleString('vi-VN')} PV x ${appState.BV_MULTIPLIER.toLocaleString('vi-VN')} VND/PV) x (${csiPercent}%) = ${csiBonus.toLocaleString('vi-VN')} VND
+                    </p>
+                `;
+            }
+            showAnalysisModal('Phân Tích Hoa Hồng Bán Lẻ CSI', content);
         });
 
         closeModalBtn.addEventListener('click', () => {
