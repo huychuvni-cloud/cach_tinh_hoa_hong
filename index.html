@@ -9,9 +9,26 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
+            margin: 0;
+            padding-top: 6rem; /* Khoảng trống cho header dính */
+        }
+        .header {
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            padding: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            border-bottom-left-radius: 1rem;
+            border-bottom-right-radius: 1rem;
         }
         .container {
             max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
         }
         input[type="number"]::-webkit-outer-spin-button,
         input[type="number"]::-webkit-inner-spin-button {
@@ -37,13 +54,17 @@
         }
     </style>
 </head>
-<body class="p-6">
+<body>
+    <!-- Sticky header with reset button -->
+    <div class="header">
+        <button id="reset-btn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-red-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-red-500">
+            Đặt lại
+        </button>
+    </div>
+
     <div class="container mx-auto p-8 bg-white rounded-xl shadow-lg">
-        <div class="flex justify-between items-center mb-6">
+        <div class="mb-6">
             <h1 class="text-3xl font-bold text-blue-800">Công Cụ Tính Thu Nhập</h1>
-            <button id="reset-btn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-red-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-red-500">
-                Đặt lại
-            </button>
         </div>
         <p class="text-gray-600 mb-8">
             Dựa trên Kế hoạch Trả thưởng Amway Việt Nam, công cụ này giúp bạn ước tính thu nhập của mình.
@@ -58,6 +79,22 @@
         <!-- Main User Input Section -->
         <div class="bg-blue-50 p-6 rounded-xl mb-6">
             <h2 class="text-xl font-semibold text-blue-700 mb-4">Nhập PV của bạn</h2>
+            
+            <!-- NPP Duration selection -->
+            <div class="mb-4">
+                <h3 class="text-lg font-medium text-blue-800 mb-2">Trạng thái NPP:</h3>
+                <div class="flex items-center space-x-4">
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="npp-status" value="new" class="form-radio text-blue-600" checked>
+                        <span class="ml-2 text-gray-700">Dưới 12 tháng</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="npp-status" value="old" class="form-radio text-blue-600">
+                        <span class="ml-2 text-gray-700">Trên 12 tháng</span>
+                    </label>
+                </div>
+            </div>
+
             <div class="flex items-center mb-1">
                 <label for="my-pv-input" class="w-1/2 text-lg font-medium text-blue-800">PV Cá nhân:</label>
                 <input
@@ -170,6 +207,7 @@
         let appState = {
             myPersonalPV: 600,
             myCustomerPV: 0,
+            isNewNPP: true, // true for < 12 months, false for > 12 months
             downline: [
                 { id: Date.now(), name: 'Nhánh 1', personalPV: 600, customerPV: 0 },
             ],
@@ -196,9 +234,12 @@
         // Function to reset the application state
         function resetAppState() {
             appState = {
-                myPersonalPV: 0,
+                myPersonalPV: 600,
                 myCustomerPV: 0,
-                downline: [],
+                isNewNPP: true,
+                downline: [
+                    { id: Date.now(), name: 'Nhánh 1', personalPV: 600, customerPV: 0 },
+                ],
                 achievementTable: [
                     { pv: 10000, percent: 21 },
                     { pv: 7000, percent: 18 },
@@ -215,8 +256,9 @@
                 },
                 BV_MULTIPLIER: 26800
             };
-            myPersonalPVInput.value = '0';
+            myPersonalPVInput.value = '600';
             myCustomerPVInput.value = '0';
+            document.querySelector('input[name="npp-status"][value="new"]').checked = true;
             renderDownlineInputs();
             updateUI();
         }
@@ -258,6 +300,7 @@
         const closeModalBtn = document.getElementById('close-modal-btn');
         const missingPVMessageElement = document.getElementById('missing-pv-message');
         const resetButton = document.getElementById('reset-btn');
+        const nppStatusRadios = document.querySelectorAll('input[name="npp-status"]');
 
         // Global variables to store the latest calculation results for analysis
         let latestCalculationResults = {};
@@ -602,15 +645,24 @@
             // 11. Calculate CSI Bonus (CSI: Customer Sales Incentive)
             const myPersonalPVOnly = parseFloat(myPersonalPVInput.value) || 0;
             const myCustomerPVOnly = parseFloat(myCustomerPVInput.value) || 0;
-            // The document states CSI is for 9% and below, so myAchievementPercent must be <= 9
-            if (myPersonalPVOnly >= 50 && myCustomerPVOnly > 0 && myAchievementPercent <= 9) {
-                const csiPercent = 10 - myAchievementPercent;
-                const customerBV = myCustomerPVOnly * appState.BV_MULTIPLIER;
-                csiBonus = customerBV * (csiPercent / 100);
-                csiBonusRow.classList.remove('hidden');
+            
+            // Check if NPP is eligible for CSI based on membership duration
+            if (appState.isNewNPP) {
+                // Now check other CSI conditions
+                if (myPersonalPVOnly >= 50 && myCustomerPVOnly > 0 && myAchievementPercent <= 9) {
+                    const csiPercent = 10 - myAchievementPercent;
+                    const customerBV = myCustomerPVOnly * appState.BV_MULTIPLIER;
+                    csiBonus = customerBV * (csiPercent / 100);
+                    csiBonusRow.classList.remove('hidden');
+                } else {
+                    csiBonusRow.classList.add('hidden');
+                }
             } else {
+                // If NPP is "old", they don't get CSI bonus
+                csiBonus = 0;
                 csiBonusRow.classList.add('hidden');
             }
+
 
             // 12. Calculate total income by adding all eligible bonuses
             const totalIncome = totalAchievementBonus + bronzeFoundationBonus + bronzeBuilderBonus + csiBonus;
@@ -619,6 +671,7 @@
             latestCalculationResults = {
                 myPersonalPV,
                 myCustomerPV,
+                isNewNPP: appState.isNewNPP,
                 myPersonalAndCustomerPV,
                 myPersonalGroupPV,
                 totalGroupPV,
@@ -686,6 +739,13 @@
 
         resetButton.addEventListener('click', () => {
             resetAppState();
+        });
+        
+        nppStatusRadios.forEach(radio => {
+            radio.addEventListener('change', (event) => {
+                appState.isNewNPP = event.target.value === 'new';
+                updateUI();
+            });
         });
 
         // Use event delegation for downline inputs and delete buttons
@@ -911,10 +971,16 @@
             const myCustomerPVOnly = latestCalculationResults.myCustomerPV;
             const myAchievementPercent = latestCalculationResults.myAchievementPercent;
             const csiBonus = latestCalculationResults.csiBonus;
-
+            const isNewNPP = latestCalculationResults.isNewNPP;
+            
             let content = `<p><strong>Hoa hồng bán lẻ CSI</strong> (Customer Sales Incentive) là khoản thưởng cho Nhà Phân Phối, được tính trên doanh số từ các đơn hàng của Khách hàng Nhà phân phối (KHNPP) đủ điều kiện.</p>`;
             
-            if (myPersonalPVOnly < 50) {
+            if (!isNewNPP) {
+                 content += `
+                    <p class="text-red-600 font-semibold mt-4">Bạn chưa đủ điều kiện nhận Hoa hồng CSI.</p>
+                    <p class="mt-2"><strong>Lý do:</strong> Bạn là NPP đã ký thẻ tham gia trên 12 tháng, không thuộc đối tượng nhận thưởng này.</p>
+                `;
+            } else if (myPersonalPVOnly < 50) {
                 content += `
                     <p class="text-red-600 font-semibold mt-4">Bạn chưa đủ điều kiện nhận Hoa hồng CSI.</p>
                     <p class="mt-2"><strong>Lý do:</strong> Doanh số cá nhân của bạn (${formatPV(myPersonalPVOnly)} PV) dưới mức tối thiểu là 50 PV.</p>
