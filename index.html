@@ -45,6 +45,7 @@
                     type="number"
                     id="my-pv-input"
                     value="600"
+                    step="0.1"
                     class="flex-1 p-3 border border-blue-200 rounded-lg text-lg text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
                 />
             </div>
@@ -54,6 +55,7 @@
                     type="number"
                     id="my-customer-pv-input"
                     value="0"
+                    step="0.1"
                     class="flex-1 p-3 border border-blue-200 rounded-lg text-lg text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
                 />
             </div>
@@ -238,11 +240,11 @@
                     const totalPVElement = el.querySelector('.downline-total-pv');
                     const percentElement = el.querySelector('.downline-percent');
                     const nameElement = el.querySelector('.downline-name-display'); // New element
-                    const totalDownlinePV = parseInt(member.personalPV) + parseInt(member.customerPV);
+                    const totalDownlinePV = parseFloat(member.personalPV) + parseFloat(member.customerPV);
                     const downlineAchievementPercent = getAchievementPercent(totalDownlinePV);
 
                     if (totalPVElement) {
-                        totalPVElement.textContent = `${totalDownlinePV} PV`;
+                        totalPVElement.textContent = `${totalDownlinePV.toFixed(2)} PV`;
                     }
                     if (percentElement) {
                         percentElement.textContent = `${downlineAchievementPercent}%`;
@@ -260,7 +262,7 @@
         function renderDownlineInputs() {
             downlineContainer.innerHTML = '';
             appState.downline.forEach(member => {
-                const totalDownlinePV = parseInt(member.personalPV) + parseInt(member.customerPV);
+                const totalDownlinePV = parseFloat(member.personalPV) + parseFloat(member.customerPV);
                 const downlineAchievementPercent = getAchievementPercent(totalDownlinePV);
                 const downlineDiv = document.createElement('div');
                 downlineDiv.className = 'bg-gray-200 p-4 rounded-lg space-y-2 downline-item';
@@ -280,6 +282,7 @@
                         <label class="w-1/2 text-sm font-medium text-gray-700">PV Cá nhân:</label>
                         <input
                             type="number"
+                            step="0.1"
                             data-id="${member.id}"
                             data-type="personal"
                             value="${member.personalPV}"
@@ -290,6 +293,7 @@
                         <label class="w-1/2 text-sm font-medium text-gray-700">PV từ KHNPP:</label>
                         <input
                             type="number"
+                            step="0.1"
                             data-id="${member.id}"
                             data-type="customer"
                             value="${member.customerPV}"
@@ -298,7 +302,7 @@
                     </div>
                     <div class="flex justify-between items-center mt-2 text-sm font-medium">
                          <span class="text-gray-800 downline-name-display">${member.name}:</span>
-                        <span class="text-blue-600 font-bold downline-total-pv">${totalDownlinePV} PV</span>
+                        <span class="text-blue-600 font-bold downline-total-pv">${totalDownlinePV.toFixed(2)} PV</span>
                         <span class="text-blue-600 font-bold w-12 text-right downline-percent">
                              ${downlineAchievementPercent}%
                         </span>
@@ -322,11 +326,11 @@
          */
         function updateUI() {
             // Calculate my personal and customer PV
-            const myPersonalAndCustomerPV = parseInt(myPersonalPVInput.value) + parseInt(myCustomerPVInput.value);
+            const myPersonalAndCustomerPV = parseFloat(myPersonalPVInput.value) + parseFloat(myCustomerPVInput.value);
 
             // 1. Calculate downline PV and percentages
             const downlineDetails = appState.downline.map(member => {
-                const totalDownlinePV = parseInt(member.personalPV) + parseInt(member.customerPV);
+                const totalDownlinePV = parseFloat(member.personalPV) + parseFloat(member.customerPV);
                 const downlineAchievementPercent = getAchievementPercent(totalDownlinePV);
                 return { id: member.id, name: member.name, totalPV: totalDownlinePV, percent: downlineAchievementPercent };
             });
@@ -460,8 +464,8 @@
             }
             
             // 10. Calculate CSI Bonus (CSI: Customer Sales Incentive)
-            const myPersonalPV = parseInt(myPersonalPVInput.value) || 0;
-            const myCustomerPV = parseInt(myCustomerPVInput.value) || 0;
+            const myPersonalPV = parseFloat(myPersonalPVInput.value) || 0;
+            const myCustomerPV = parseFloat(myCustomerPVInput.value) || 0;
             // The document states CSI is for 9% and below, so myAchievementPercent must be <= 9
             if (myPersonalPV >= 50 && myCustomerPV > 0 && myAchievementPercent <= 9) {
                 const csiPercent = 10 - myAchievementPercent;
@@ -498,7 +502,7 @@
             };
 
             // 13. Update the DOM with the new values
-            totalPVElement.textContent = `${totalGroupPV.toLocaleString('vi-VN')} PV`;
+            totalPVElement.textContent = `${totalGroupPV.toFixed(2)} PV`;
             achievementPercentElement.textContent = `${myAchievementPercent}%`;
             myIncomeElement.textContent = `${myIncome.toLocaleString('vi-VN')} VND`;
             downlineBonusElement.textContent = `${differentialBonus.toLocaleString('vi-VN')} VND`;
@@ -525,12 +529,12 @@
 
         // Event Listeners
         myPersonalPVInput.addEventListener('input', (event) => {
-            appState.myPersonalPV = parseInt(event.target.value) || 0;
+            appState.myPersonalPV = parseFloat(event.target.value) || 0;
             updateUI();
         });
         
         myCustomerPVInput.addEventListener('input', (event) => {
-            appState.myCustomerPV = parseInt(event.target.value) || 0;
+            appState.myCustomerPV = parseFloat(event.target.value) || 0;
             updateUI();
         });
 
@@ -553,9 +557,9 @@
                     if (type === 'name') {
                         member.name = event.target.value;
                     } else if (type === 'personal') {
-                        member.personalPV = parseInt(event.target.value) || 0;
+                        member.personalPV = parseFloat(event.target.value) || 0;
                     } else if (type === 'customer') {
-                        member.customerPV = parseInt(event.target.value) || 0;
+                        member.customerPV = parseFloat(event.target.value) || 0;
                     }
                     updateUI();
                 }
@@ -579,7 +583,7 @@
                     <p><strong>Tổng PV Nhóm</strong> là tổng điểm từ PV cá nhân của bạn, PV từ khách hàng của bạn và tổng PV của tất cả các nhánh tuyến dưới.</p>
                     <p><strong>Công thức:</strong> Tổng PV Cá nhân + Tổng PV Các nhánh tuyến dưới</p>
                     <p class="font-bold">
-                        ${latestCalculationResults.myPersonalAndCustomerPV.toLocaleString('vi-VN')} PV (Cá nhân) + ${(latestCalculationResults.totalGroupPV - latestCalculationResults.myPersonalAndCustomerPV).toLocaleString('vi-VN')} PV (Các nhánh) = ${latestCalculationResults.totalGroupPV.toLocaleString('vi-VN')} PV
+                        ${latestCalculationResults.myPersonalAndCustomerPV.toFixed(2)} PV (Cá nhân) + ${(latestCalculationResults.totalGroupPV - latestCalculationResults.myPersonalAndCustomerPV).toFixed(2)} PV (Các nhánh) = ${latestCalculationResults.totalGroupPV.toFixed(2)} PV
                     </p>
                 </div>
             `;
@@ -609,7 +613,7 @@
                         </tbody>
                     </table>
                 </div>
-                <p class="mt-4">Với tổng PV nhóm là <strong>${latestCalculationResults.totalGroupPV.toLocaleString('vi-VN')} PV</strong>, bạn đạt mức hoa hồng thành tích là <strong>${latestCalculationResults.myAchievementPercent}%</strong>.</p>
+                <p class="mt-4">Với tổng PV nhóm là <strong>${latestCalculationResults.totalGroupPV.toFixed(2)} PV</strong>, bạn đạt mức hoa hồng thành tích là <strong>${latestCalculationResults.myAchievementPercent}%</strong>.</p>
             `;
             showAnalysisModal('Phân Tích Mức Hoa Hồng Thành Tích', content);
         });
@@ -623,7 +627,7 @@
                     <p><strong>Thu nhập cá nhân</strong> được tính dựa trên doanh số cá nhân và mức hoa hồng thành tích của bạn.</p>
                     <p><strong>Công thức:</strong> (PV Cá nhân + PV từ KHNPP) x BV x Mức % Hoa hồng Thành tích</p>
                     <p class="font-bold">
-                        (${myPersonalAndCustomerPV.toLocaleString('vi-VN')} PV) x ${appState.BV_MULTIPLIER.toLocaleString('vi-VN')} VND/PV x ${latestCalculationResults.myAchievementPercent}% = ${myIncome.toLocaleString('vi-VN')} VND
+                        (${myPersonalAndCustomerPV.toFixed(2)} PV) x ${appState.BV_MULTIPLIER.toLocaleString('vi-VN')} VND/PV x ${latestCalculationResults.myAchievementPercent}% = ${myIncome.toLocaleString('vi-VN')} VND
                     </p>
                 </div>
             `;
@@ -642,7 +646,7 @@
                             <h4 class="font-semibold text-gray-800">Nhánh ${detail.name}:</h4>
                             <p><strong>Công thức:</strong> Doanh số nhánh x Chênh lệch % Hoa hồng</p>
                             <p class="text-sm">
-                                (${detail.pv.toLocaleString('vi-VN')} PV x ${appState.BV_MULTIPLIER.toLocaleString('vi-VN')} VND/PV) x (${latestCalculationResults.myAchievementPercent}% - ${detail.percent}%) = ${detail.bonus.toLocaleString('vi-VN')} VND
+                                (${detail.pv.toFixed(2)} PV x ${appState.BV_MULTIPLIER.toLocaleString('vi-VN')} VND/PV) x (${latestCalculationResults.myAchievementPercent}% - ${detail.percent}%) = ${detail.bonus.toLocaleString('vi-VN')} VND
                             </p>
                         </div>
                     `;
@@ -675,21 +679,21 @@
                          content += `
                             <p class="text-green-600 font-semibold">Bạn đủ điều kiện nhận hoa hồng lãnh đạo Toàn phần!</p>
                             <p><strong>Điều kiện:</strong> Doanh số nhóm cá nhân của bạn đạt từ 10.000 PV trở lên.</p>
-                            <p class="font-semibold">Doanh số nhóm cá nhân của bạn: ${latestCalculationResults.myPersonalGroupPV.toLocaleString('vi-VN')} PV</p>
+                            <p class="font-semibold">Doanh số nhóm cá nhân của bạn: ${latestCalculationResults.myPersonalGroupPV.toFixed(2)} PV</p>
                             <p><strong>Công thức:</strong> Doanh số nhánh 21% x 6%</p>
                             <p class="text-sm">
-                                (${detail.pv.toLocaleString('vi-VN')} PV x ${appState.BV_MULTIPLIER.toLocaleString('vi-VN')} VND/PV) x 6% = ${detail.netBonus.toLocaleString('vi-VN')} VND
+                                (${detail.pv.toFixed(2)} PV x ${appState.BV_MULTIPLIER.toLocaleString('vi-VN')} VND/PV) x 6% = ${detail.netBonus.toLocaleString('vi-VN')} VND
                             </p>
                         `;
                     } else if (detail.type === "Một phần") {
                          content += `
                             <p class="text-yellow-600 font-semibold">Bạn đủ điều kiện nhận hoa hồng lãnh đạo Một phần.</p>
                             <p><strong>Điều kiện:</strong> Doanh số nhóm cá nhân của bạn đạt từ 4.000 PV đến dưới 10.000 PV.</p>
-                            <p class="font-semibold">Doanh số nhóm cá nhân của bạn: ${latestCalculationResults.myPersonalGroupPV.toLocaleString('vi-VN')} PV</p>
+                            <p class="font-semibold">Doanh số nhóm cá nhân của bạn: ${latestCalculationResults.myPersonalGroupPV.toFixed(2)} PV</p>
                             <p><strong>Công thức:</strong> (Doanh số nhánh 21% x 6%) - Khoản điều chỉnh</p>
                              <p><strong>Khoản điều chỉnh:</strong></p>
                             <p class="text-sm">
-                                (10,000 - ${detail.uplinePersonalGroupPV.toLocaleString('vi-VN')}) PV x ${appState.BV_MULTIPLIER.toLocaleString('vi-VN')} VND/PV x 6% = ${detail.adjustment.toLocaleString('vi-VN')} VND
+                                (10,000 - ${latestCalculationResults.myPersonalGroupPV.toFixed(2)}) PV x ${appState.BV_MULTIPLIER.toLocaleString('vi-VN')} VND/PV x 6% = ${detail.adjustment.toLocaleString('vi-VN')} VND
                             </p>
                              <p><strong>Hoa hồng Lãnh đạo thực nhận:</strong></p>
                             <p class="text-sm">
@@ -700,7 +704,7 @@
                         content += `
                             <p class="text-red-600 font-semibold">Bạn chưa đủ điều kiện nhận Hoa hồng Lãnh đạo từ nhánh này.</p>
                             <p><strong>Lý do:</strong> ${detail.reason}</p>
-                            <p class="font-semibold">Doanh số nhóm cá nhân của bạn: ${latestCalculationResults.myPersonalGroupPV.toLocaleString('vi-VN')} PV</p>
+                            <p class="font-semibold">Doanh số nhóm cá nhân của bạn: ${latestCalculationResults.myPersonalGroupPV.toFixed(2)} PV</p>
                         `;
                     }
                     content += `</div>`;
@@ -762,7 +766,7 @@
             if (myPersonalPV < 50) {
                 content += `
                     <p class="text-red-600 font-semibold mt-4">Bạn chưa đủ điều kiện nhận Hoa hồng CSI.</p>
-                    <p class="mt-2"><strong>Lý do:</strong> Doanh số cá nhân của bạn (${myPersonalPV} PV) dưới mức tối thiểu là 50 PV.</p>
+                    <p class="mt-2"><strong>Lý do:</strong> Doanh số cá nhân của bạn (${myPersonalPV.toFixed(2)} PV) dưới mức tối thiểu là 50 PV.</p>
                 `;
             } else if (myAchievementPercent > 9) {
                 content += `
@@ -783,7 +787,7 @@
                     </ul>
                     <p class="mt-4"><strong>Công thức:</strong> (PV từ KHNPP x BV) x (10% - Mức % Hoa hồng Thành tích)</p>
                     <p class="font-bold">
-                        (${myCustomerPV.toLocaleString('vi-VN')} PV x ${appState.BV_MULTIPLIER.toLocaleString('vi-VN')} VND/PV) x (${csiPercent}%) = ${csiBonus.toLocaleString('vi-VN')} VND
+                        (${myCustomerPV.toFixed(2)} PV x ${appState.BV_MULTIPLIER.toLocaleString('vi-VN')} VND/PV) x (${csiPercent}%) = ${csiBonus.toLocaleString('vi-VN')} VND
                     </p>
                 `;
             }
