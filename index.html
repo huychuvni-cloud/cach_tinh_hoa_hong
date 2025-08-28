@@ -39,8 +39,13 @@
 </head>
 <body class="p-6">
     <div class="container mx-auto p-8 bg-white rounded-xl shadow-lg">
-        <h1 class="text-3xl font-bold text-center text-blue-800 mb-6">Công Cụ Tính Thu Nhập Amway</h1>
-        <p class="text-center text-gray-600 mb-8">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-blue-800">Công Cụ Tính Thu Nhập</h1>
+            <button id="reset-btn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-red-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-red-500">
+                Đặt lại
+            </button>
+        </div>
+        <p class="text-gray-600 mb-8">
             Dựa trên Kế hoạch Trả thưởng Amway Việt Nam, công cụ này giúp bạn ước tính thu nhập của mình.
         </p>
 
@@ -162,7 +167,7 @@
 
     <script>
         // Data model to store the state of the application
-        const appState = {
+        let appState = {
             myPersonalPV: 600,
             myCustomerPV: 0,
             downline: [
@@ -187,6 +192,34 @@
             // BV multiplier updated as per user's request
             BV_MULTIPLIER: 26800
         };
+
+        // Function to reset the application state
+        function resetAppState() {
+            appState = {
+                myPersonalPV: 0,
+                myCustomerPV: 0,
+                downline: [],
+                achievementTable: [
+                    { pv: 10000, percent: 21 },
+                    { pv: 7000, percent: 18 },
+                    { pv: 4000, percent: 15 },
+                    { pv: 2400, percent: 12 },
+                    { pv: 1200, percent: 9 },
+                    { pv: 600, percent: 6 },
+                    { pv: 200, percent: 3 },
+                    { pv: 0, percent: 0 }
+                ],
+                bronzeRates: {
+                    foundation: 15,
+                    builder: 20
+                },
+                BV_MULTIPLIER: 26800
+            };
+            myPersonalPVInput.value = '0';
+            myCustomerPVInput.value = '0';
+            renderDownlineInputs();
+            updateUI();
+        }
         
         // Helper function to format numbers as VND
         function formatVND(amount) {
@@ -224,6 +257,7 @@
         const modalContent = document.getElementById('modal-content');
         const closeModalBtn = document.getElementById('close-modal-btn');
         const missingPVMessageElement = document.getElementById('missing-pv-message');
+        const resetButton = document.getElementById('reset-btn');
 
         // Global variables to store the latest calculation results for analysis
         let latestCalculationResults = {};
@@ -446,6 +480,8 @@
             let csiBonus = 0; // New variable for CSI bonus
             const differentialBonusDetails = [];
             const leadershipBonusDetails = [];
+            const qualified21PercentLegs = twentyOnePercentLegs.length;
+
 
             // 8. Calculate differential bonus from non-21% legs
             otherDownlines.forEach(member => {
@@ -471,8 +507,20 @@
                 const grossBonus = downlineBV * 0.06;
                 let netBonus = 0;
 
-                // Determine if it's a "Full-Qualified" or "Partially-Qualified" bonus
-                if (myPersonalGroupPV >= 10000) {
+                // Condition check for Leadership Bonus:
+                // 1. If there are 6 or more 21% legs, a full bonus is granted.
+                // 2. Otherwise, the normal rules apply (4000 PV or 10000 PV).
+                if (qualified21PercentLegs >= 6) {
+                     // Full bonus because there are 6 or more 21% legs
+                     netBonus = grossBonus;
+                     leadershipBonusDetails.push({
+                         id: leg.id,
+                         name: leg.name,
+                         pv: leg.totalPV,
+                         type: "Toàn phần (Đủ 6 nhánh 21%)",
+                         netBonus: netBonus
+                     });
+                 } else if (myPersonalGroupPV >= 10000) {
                     // Full-Qualified Leadership Bonus
                     netBonus = grossBonus;
                     leadershipBonusDetails.push({
@@ -586,7 +634,8 @@
                 csiBonus,
                 totalIncome,
                 qualified3PercentLegs,
-                qualified6PercentLegs
+                qualified6PercentLegs,
+                qualified21PercentLegs
             };
 
             // 14. Update the DOM with the new values
@@ -633,6 +682,10 @@
             // Rerender all downline inputs only when adding a new one
             renderDownlineInputs();
             updateUI();
+        });
+
+        resetButton.addEventListener('click', () => {
+            resetAppState();
         });
 
         // Use event delegation for downline inputs and delete buttons
@@ -763,7 +816,17 @@
                         <div class="bg-gray-100 p-4 rounded-lg">
                             <h4 class="font-semibold text-gray-800">Nhánh ${detail.name}:</h4>
                     `;
-                    if (detail.type === "Toàn phần") {
+                    // Check for the 6-leg condition first
+                    if (latestCalculationResults.qualified21PercentLegs >= 6) {
+                        content += `
+                            <p class="text-green-600 font-semibold">Bạn đủ điều kiện nhận hoa hồng lãnh đạo Toàn phần!</p>
+                            <p><strong>Lý do:</strong> Bạn có từ 6 nhánh 21% trở lên.</p>
+                            <p><strong>Công thức:</strong> Doanh số nhánh 21% x 6%</p>
+                            <p class="text-sm">
+                                (${formatPV(detail.pv)} PV x ${appState.BV_MULTIPLIER.toLocaleString('vi-VN')} VND/PV) x 6% = ${formatVND(detail.netBonus)}
+                            </p>
+                        `;
+                    } else if (detail.type === "Toàn phần") {
                          content += `
                             <p class="text-green-600 font-semibold">Bạn đủ điều kiện nhận hoa hồng lãnh đạo Toàn phần!</p>
                             <p><strong>Điều kiện:</strong> Doanh số nhóm cá nhân của bạn đạt từ 10.000 PV trở lên.</p>
