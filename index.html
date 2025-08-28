@@ -21,6 +21,20 @@
         input[type="number"] {
             -moz-appearance: textfield;
         }
+        .missing-pv-message {
+            background-color: #fffbeb; /* Light yellow background */
+            color: #92400e; /* Dark orange text */
+            border-left: 4px solid #d97706; /* Orange left border */
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        .missing-pv-amount {
+            color: #b45309; /* Even darker orange for amount */
+            font-weight: 800;
+        }
     </style>
 </head>
 <body class="p-6">
@@ -72,6 +86,11 @@
             <button id="add-downline-btn" class="mt-4 w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 + Thêm Nhánh Tuyến Dưới
             </button>
+        </div>
+
+        <!-- Missing PV Message -->
+        <div id="missing-pv-message" class="missing-pv-message hidden">
+            <!-- Message will be displayed here -->
         </div>
 
         <!-- Results Section -->
@@ -204,6 +223,7 @@
         const modalTitle = document.getElementById('modal-title');
         const modalContent = document.getElementById('modal-content');
         const closeModalBtn = document.getElementById('close-modal-btn');
+        const missingPVMessageElement = document.getElementById('missing-pv-message');
 
         // Global variables to store the latest calculation results for analysis
         let latestCalculationResults = {};
@@ -220,6 +240,25 @@
                 }
             }
             return 0;
+        }
+
+        /**
+         * Finds the next achievement level based on the current PV.
+         * @param {number} currentPV - The current total group PV.
+         * @returns {object|null} The next achievement level, or null if already at the top.
+         */
+        function getNextAchievementLevel(currentPV) {
+            // Sort levels by PV in ascending order to find the *next* level
+            const sortedLevels = [...appState.achievementTable].sort((a, b) => a.pv - b.pv);
+            
+            for (const level of sortedLevels) {
+                // The next level is the first one with a PV value greater than the current PV.
+                if (currentPV < level.pv) {
+                    return level;
+                }
+            }
+            // If the loop finishes, it means the user is at or above the highest level.
+            return null;
         }
         
         /**
@@ -381,8 +420,24 @@
 
             // 5. Determine my achievement percentage
             const myAchievementPercent = getAchievementPercent(totalGroupPV);
-            
-            // 6. Calculate my personal income
+
+            // 6. Display missing PV to next level
+            const nextLevel = getNextAchievementLevel(totalGroupPV);
+            if (nextLevel) {
+                const missingPV = nextLevel.pv - totalGroupPV;
+                const missingVND = missingPV * appState.BV_MULTIPLIER;
+                missingPVMessageElement.innerHTML = `
+                    Bạn còn thiếu <span class="missing-pv-amount">${formatPV(missingPV)} PV</span>
+                    (<span class="missing-pv-amount">${formatVND(missingVND)}</span>)
+                    để đạt mức <span class="missing-pv-amount">${nextLevel.percent}%</span>!
+                `;
+                missingPVMessageElement.classList.remove('hidden');
+            } else {
+                // If at the highest level, hide the message
+                missingPVMessageElement.classList.add('hidden');
+            }
+
+            // 7. Calculate my personal income
             const myBV = myPersonalAndCustomerPV * appState.BV_MULTIPLIER;
             const myIncome = myBV * (myAchievementPercent / 100);
             
@@ -392,7 +447,7 @@
             const differentialBonusDetails = [];
             const leadershipBonusDetails = [];
 
-            // 7. Calculate differential bonus from non-21% legs
+            // 8. Calculate differential bonus from non-21% legs
             otherDownlines.forEach(member => {
                 const differentialPercent = myAchievementPercent - member.percent;
                 if (differentialPercent > 0) {
@@ -410,7 +465,7 @@
                 }
             });
 
-            // 8. Calculate Leadership Bonus from 21% legs
+            // 9. Calculate Leadership Bonus from 21% legs
             twentyOnePercentLegs.forEach(leg => {
                 const downlineBV = leg.totalPV * appState.BV_MULTIPLIER;
                 const grossBonus = downlineBV * 0.06;
@@ -466,7 +521,7 @@
 
             const totalAchievementBonus = myIncome + differentialBonus + leadershipBonus;
 
-            // 9. Calculate Bronze Foundation and Bronze Builder bonuses
+            // 10. Calculate Bronze Foundation and Bronze Builder bonuses
             let bronzeFoundationBonus = 0;
             let bronzeBuilderBonus = 0;
             let qualified3PercentLegs = 0;
@@ -496,7 +551,7 @@
                 bronzeBuilderBonusRow.classList.add('hidden');
             }
             
-            // 10. Calculate CSI Bonus (CSI: Customer Sales Incentive)
+            // 11. Calculate CSI Bonus (CSI: Customer Sales Incentive)
             const myPersonalPVOnly = parseFloat(myPersonalPVInput.value) || 0;
             const myCustomerPVOnly = parseFloat(myCustomerPVInput.value) || 0;
             // The document states CSI is for 9% and below, so myAchievementPercent must be <= 9
@@ -509,10 +564,10 @@
                 csiBonusRow.classList.add('hidden');
             }
 
-            // 11. Calculate total income by adding all eligible bonuses
+            // 12. Calculate total income by adding all eligible bonuses
             const totalIncome = totalAchievementBonus + bronzeFoundationBonus + bronzeBuilderBonus + csiBonus;
 
-            // 12. Store results for analysis
+            // 13. Store results for analysis
             latestCalculationResults = {
                 myPersonalPV,
                 myCustomerPV,
@@ -534,7 +589,7 @@
                 qualified6PercentLegs
             };
 
-            // 13. Update the DOM with the new values
+            // 14. Update the DOM with the new values
             totalPVElement.textContent = `${formatPV(totalGroupPV)} PV`;
             achievementPercentElement.textContent = `${myAchievementPercent}%`;
             myIncomeElement.textContent = `${formatVND(myIncome)}`;
